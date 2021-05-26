@@ -6,11 +6,11 @@ from stg_node import STGNode, convert_to_label_node, convert_from_label_node
 from utils import plot_utils
 
 # How to handle removal of edges:
-# Cosine weight the previous output to 0.0 weight over a few timesteps, 
+# Cosine weight the previous output to 0.0 weight over a few timesteps,
 # then remove that LSTM from computations.
 
 # How to handle addition of edges:
-# Create a new LSTM with zero init hidden state and cosine weight 
+# Create a new LSTM with zero init hidden state and cosine weight
 # the added points up to 1.0 weight over a few timesteps.
 # This gating is on the output of the LSTM.
 class SpatioTemporalGraphCVAEModel(object):
@@ -31,7 +31,7 @@ class SpatioTemporalGraphCVAEModel(object):
         self.nodes = set()
 
 
-    def set_scene_graph(self, scene_graph):    
+    def set_scene_graph(self, scene_graph):
         self.node_models_dict.clear()
 
         for node in scene_graph.nodes:
@@ -42,7 +42,7 @@ class SpatioTemporalGraphCVAEModel(object):
                                'dynamic_edges': self.dynamic_edges,
                                'hyperparams': self.hyperparams}
 
-                self.node_models_dict[str(node)] = MultimodalGenerativeCVAE(node, 
+                self.node_models_dict[str(node)] = MultimodalGenerativeCVAE(node,
                                                                             self.model_registrar,
                                                                             self.robot_node,
                                                                             kwargs_dict,
@@ -73,7 +73,7 @@ class SpatioTemporalGraphCVAEModel(object):
 
         # This is important to ensure that each node model is using the same training data points.
         mhl, ph = self.hyperparams['minimum_history_length'], self.hyperparams['prediction_horizon']
-        if np.any(inputs['traj_lengths'] < mhl + ph):
+        if np.any((inputs['traj_lengths'] < mhl + ph).data.cpu().detach().numpy()):
             batch_size = inputs['traj_lengths'].shape[0]
             idxs_to_keep = [batch_idx for batch_idx, traj_len in enumerate(inputs['traj_lengths']) if traj_len >= mhl + ph]
 
@@ -83,19 +83,19 @@ class SpatioTemporalGraphCVAEModel(object):
             for key, value in labels.items():
                 labels[key] = value[idxs_to_keep]
 
-            print("""WARNING: There are trajectory lengths less than %d (= minimum_history_length + prediction_horizon) in the training input!
-Ignoring those indices, the batch size will be reduced from %d to %d.""" % (mhl + ph, batch_size, inputs['traj_lengths'].shape[0]))
+            #print("""WARNING: There are trajectory lengths less than %d (= minimum_history_length + prediction_horizon) in the training input!
+#Ignoring those indices, the batch size will be reduced from %d to %d.""" % (mhl + ph, batch_size, inputs['traj_lengths'].shape[0]))
 
         traj_lengths = inputs['traj_lengths']
-        prediction_timesteps = mhl - 1 + torch.fmod(torch.randint(low=0, 
-                                                                  high=2**31-1, 
+        prediction_timesteps = mhl - 1 + torch.fmod(torch.randint(low=0,
+                                                                  high=2**31-1,
                                                                   size=traj_lengths.shape).to(self.device),
-                                                    traj_lengths-mhl-ph+1).long()
+                                                    (traj_lengths-mhl-ph+1).long()).long()
 
         losses = list()
         for node in self.nodes:
             model = self.node_models_dict[str(node)]
-            losses.append(model.train_loss(inputs, 
+            losses.append(model.train_loss(inputs,
                                            labels[convert_to_label_node(node)],
                                            num_predicted_timesteps,
                                            prediction_timesteps))
@@ -110,7 +110,7 @@ Ignoring those indices, the batch size will be reduced from %d to %d.""" % (mhl 
 
         # This is important to ensure that each node model is using the same eval data points.
         mhl, ph = self.hyperparams['minimum_history_length'], self.hyperparams['prediction_horizon']
-        if np.any(inputs['traj_lengths'] < mhl + ph):
+        if np.any((inputs['traj_lengths'] < mhl + ph).data.cpu().detach().numpy()):
             batch_size = inputs['traj_lengths'].shape[0]
             idxs_to_keep = [batch_idx for batch_idx, traj_len in enumerate(inputs['traj_lengths']) if traj_len >= mhl + ph]
 
@@ -172,7 +172,7 @@ Ignoring those indices, the batch size will be reduced from %d to %d.""" % (mhl 
         for node in inputs:
             if isinstance(node, STGNode) or (mode == ModeKeys.PREDICT and node == str(self.robot_node) + '_future'):
                 if mode == ModeKeys.PREDICT and node == str(self.robot_node) + '_future':
-                    # This is handling the case of normalizing the future robot actions, 
+                    # This is handling the case of normalizing the future robot actions,
                     # which really should just take the same normalization as the robot
                     # from training.
                     node_mean = self.hyperparams['nodes_standardization'][self.robot_node]['mean']

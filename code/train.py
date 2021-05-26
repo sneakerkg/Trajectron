@@ -164,10 +164,10 @@ if args.preloaded_data is not None:
     if args.preloaded_data.startswith('sgan-'):
         data_source = args.preloaded_data.split('-')[1]
 
-        args.data_dir = '../sgan-dataset/data'
+        args.data_dir = './sgan-dataset/data'
         args.train_data_dict = '%s_train.pkl' % data_source
         args.eval_data_dict = '%s_val.pkl' % data_source
-        args.log_dir = '../sgan-dataset/logs/%s' % data_source
+        args.log_dir = './sgan-dataset/logs/%s' % data_source
 
         # This is the edge radius to use for the pedestrian datasets.
         # The default one is for the NBA dataset.
