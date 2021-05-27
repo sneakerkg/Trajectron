@@ -91,7 +91,6 @@ class SpatioTemporalGraphCVAEModel(object):
                                                                   high=2**31-1,
                                                                   size=traj_lengths.shape).to(self.device),
                                                     (traj_lengths-mhl-ph+1).long()).long()
-
         losses = list()
         for node in self.nodes:
             model = self.node_models_dict[str(node)]
@@ -99,7 +98,6 @@ class SpatioTemporalGraphCVAEModel(object):
                                            labels[convert_to_label_node(node)],
                                            num_predicted_timesteps,
                                            prediction_timesteps))
-
         mean_loss = torch.mean(torch.stack(losses))
         return mean_loss
 

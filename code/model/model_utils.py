@@ -52,10 +52,10 @@ def run_lstm_on_variable_length_seqs(lstm_module, original_seqs, break_indices):
 
     packed_seqs = rnn.pack_sequence(pad_list)
     packed_output, (h_n, c_n) = lstm_module(packed_seqs)
-    output, _ = rnn.pad_packed_sequence(packed_output, 
+    output, _ = rnn.pad_packed_sequence(packed_output,
                                         batch_first=True,
                                         total_length=torch.max(inclusive_break_indices))
-    
+
     # Returning it in its original order.
     return output[unsort_idxs], (h_n[:, unsort_idxs], c_n[:, unsort_idxs])
 
@@ -73,7 +73,7 @@ def unpack_RNN_state(state_tuple):
 
     state = torch.cat(state_tuple, dim=0).permute(1, 0, 2)
     # Now state is (batch, 2 * num_layers * num_directions, hidden_size)
-    
+
     state_size = state.size()
     return torch.reshape(state, (-1, state_size[1] * state_size[2]))
 
@@ -83,7 +83,7 @@ def rsetattr(obj, attr, val):
     return setattr(rgetattr(obj, pre) if pre else obj, post, val)
 
 
-# using wonder's beautiful simplification: 
+# using wonder's beautiful simplification:
 # https://stackoverflow.com/questions/31174295/getattr-and-setattr-on-nested-objects/31174427?noredirect=1#comment86638618_31174427
 def rgetattr(obj, attr, *args):
     def _getattr(obj, attr):

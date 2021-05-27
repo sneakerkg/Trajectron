@@ -165,12 +165,14 @@ def compute_batch_statistics(stg, data_dict,
         data_id = data_ids[idx]
 
         # Can't do anything if there's just no room to evaluate the model.
+        print (minimum_history_length, traj_lengths[data_id], prediction_horizon)
         if minimum_history_length >= (traj_lengths[data_id] - prediction_horizon):
             idx = ((idx + 1) % len(data_ids)) # Wrap around and continue
             continue
 
         t_predict = np.random.randint(low=minimum_history_length,
                                       high=traj_lengths[data_id] - prediction_horizon)
+        print (t_predict, robot_node)
 
         curr_inputs = {k: torch.from_numpy(v[[data_id]]).float().to(stg.device) for k, v in inputs.items()}
         if robot_node is not None:
@@ -178,9 +180,13 @@ def compute_batch_statistics(stg, data_dict,
             curr_inputs[str(robot_node) + "_future"] = robot_future
 
         curr_inputs['traj_lengths'] = torch.tensor([t_predict])
+        for k, v, in curr_inputs.items():
+            print ('aaa', k, v.shape)
 
         with torch.no_grad():
             preds_dict = stg.predict(curr_inputs, prediction_horizon+1, num_samples, most_likely=True)
+            for k, v in preds_dict.items():
+                print (k, v.shape)
 
         mse_errors, fse_errors = compute_preds_dict_only_agg_errors(preds_dict,
                                                           data_dict,

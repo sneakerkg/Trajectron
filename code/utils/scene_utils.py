@@ -202,7 +202,7 @@ class SceneGraph(object):
 
         if N == 0:
             return None, list()
-            
+
         active_idxs = list()
 
         pos_matrix = np.empty((N, 2))
