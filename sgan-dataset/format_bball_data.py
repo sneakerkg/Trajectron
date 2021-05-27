@@ -43,8 +43,17 @@ for desired_source in ['bball']:
         input_data_dict_list = list()
         data_dict_path = os.path.join('../data_for_sgan/', '_'.join([desired_source, data_class]) + '.pkl')
 
+        file_num = 0
+
         for subdir, dirs, files in os.walk(os.path.join('../data_for_sgan/', desired_source, data_class)):
             for file in files:
+                '''
+                if file_num == 100:
+                    break
+                '''
+                file_num += 1
+                print (file_num)
+
                 if file.endswith('.txt'):
                     input_data_dict = dict()
                     full_data_path = os.path.join(subdir, file)
@@ -128,7 +137,14 @@ for desired_source in ['bball']:
                     print('Done', full_data_path)
 
         agg_data_dict = dict()
+
+        for key in input_data_dict_list[0].keys():
+            agg_data_dict[key] = np.concatenate([input_data_dict[key] for idx, input_data_dict in enumerate(input_data_dict_list)], axis=0)
+            print (key, agg_data_dict[key].shape)
+
+        '''
         for idx, input_data_dict in enumerate(input_data_dict_list):
+            print (idx, len(input_data_dict_list))
             for key in input_data_dict:
                 if key in agg_data_dict:
                     curr_bs = agg_data_dict[key].shape[0]
@@ -149,6 +165,12 @@ for desired_source in ['bball']:
                         agg_data_dict[key] = np.concatenate([agg_data_dict[key], input_data_dict[key]], axis=0)
                     else:
                         agg_data_dict[key] = np.concatenate([agg_data_dict[key], np.zeros((zeros_bs, desired_max_time, state_dim)), input_data_dict[key]], axis=0)
+
+        for k, v in agg_data_dict.items():
+            print (k, v.shape)
+
+        exit(0)
+        '''
 
         traj_lengths = np.concatenate(traj_lengths_list, axis=0)
         expected_bs = traj_lengths.shape[0]
